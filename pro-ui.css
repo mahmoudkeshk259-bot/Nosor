@@ -1,4 +1,4 @@
-/* pro-ui.css v1 — قائمة جانبية يمين على الشاشات الكبيرة + لمسات زجاجية (لا يغيّر منطق التطبيق) */
+/* pro-ui.css v2 (EAGLES look) / v1 — قائمة جانبية يمين على الشاشات الكبيرة + لمسات زجاجية (لا يغيّر منطق التطبيق) */
 @keyframes pxin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .c,.bn,.kc{animation:pxin .25s ease both}
 @media(prefers-reduced-motion:reduce){.c,.bn,.kc{animation:none}}
@@ -13,3 +13,12 @@ nav button{width:100%;text-align:right;border-radius:12px}
 main{max-width:none;margin-left:0}
 :root[data-theme=light] nav{background:#ffffffee}
 }
+/* v2 — شكل EAGLES: بانر + بطاقات متدرجة + عنصر قائمة نشط */
+.hero{position:relative;min-height:150px;border-radius:18px;margin:0 0 12px;padding:18px 22px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;overflow:hidden;border:1px solid var(--line);background:linear-gradient(120deg,#07163d,#12408f) center/cover;color:#fff}
+.hero.im{background-image:linear-gradient(90deg,#050d2499,#050d2400 45%,#050d2499),url(hero.jpg)}
+.hero b{font-size:clamp(28px,6vw,48px);font-style:italic;letter-spacing:3px}
+.hero span{opacity:.85;font-size:16px}
+.c{border-radius:16px}
+:root[data-theme=dark] .g>.c{border-color:#2a4fa8;background:linear-gradient(160deg,#143073,#0a1d4d)}
+nav button.on{background:linear-gradient(90deg,#1e4fc4,#2f6bff);color:#fff;border-color:transparent}
+@media(min-width:980px){nav button{border-color:transparent;background:transparent;color:var(--mu)}nav button:hover{background:#ffffff14;border-color:transparent}nav button.on{color:#fff}}
