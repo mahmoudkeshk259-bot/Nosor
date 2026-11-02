@@ -32,7 +32,7 @@ db.tasks.forEach(x=>{const r=rm.get(x.rid);if(r&&x.due&&x.due<T&&!/مكتمل|م
 A.forEach(a=>{a.rec=R.some(x=>x.rid===a.r.id&&x.type===a.k&&Date.now()-x.t<cool)});
 return A.sort((a,b)=>WA_ORD[a.s]-WA_ORD[b.s]||String(a.r.nameAr).localeCompare(String(b.r.nameAr),'ar'))}
 function waCenter(){const T=WAS.tab,b=(k,n)=>`<button class="${T===k?'p':''}" onclick="WAS.tab='${k}';render()">${n}</button>`;
-return`<div class="row">${b('al','🔔 التنبيهات')}${b('tp','✏️ القوالب')}${b('lg','🕘 السجل')}</div>`+(T==='tp'?waTp():T==='lg'?waLg():waAl())}
+return`<div class="row">${b('al','🔔 التنبيهات')}${b('rd','👥 المناديب')}${b('tp','✏️ القوالب')}${b('lg','🕘 السجل')}</div>`+(T==='tp'?waTp():T==='lg'?waLg():T==='rd'?waRd():waAl())}
 function waAl(){const all=waAlerts(),cnt=s=>all.filter(a=>a.s===s).length,L=WAS.L=all.filter(a=>WAS.f==='all'||a.s===WAS.f),qn=L.filter(a=>a.r.wa&&!a.rec).length;
 const chip=(k,n)=>`<button class="${WAS.f===k?'on':''}" onclick="WAS.f='${k}';render()">${n}</button>`;
 return`<div class="row" style="overflow-x:auto;flex-wrap:nowrap">${chip('all','الكل ('+all.length+')')}${Object.keys(WA_SEV).map(s=>chip(s,WA_SEV[s][0]+' '+WA_SEV[s][1]+' ('+cnt(s)+')')).join('')}</div>
@@ -60,3 +60,5 @@ function waTpReset(id){db.cfg.waTpl=(db.cfg.waTpl||[]).filter(x=>x.id!==id);save
 function waSet(){db.cfg.company=$('#wco').value.trim();db.cfg.manager=$('#wmg').value.trim();db.cfg.waCool=Math.max(0,+$('#wcl').value||0);save();toast('تم الحفظ')}
 function waLg(){const L=(db.cfg.waLog||[]).slice().reverse().slice(0,60),N=Object.fromEntries(waTpl().map(x=>[x.id,x.n]));
 return L.map(x=>`<div class="c"><b>${esc(x.n)}</b> <span class="m">${new Date(x.t).toLocaleString('ar-SA')}</span><div class="m">${esc(N[x.tpl]||x.tpl)}</div></div>`).join('')||'<div class="c m">لا توجد رسائل مرسلة بعد</div>'}
+function waRd(){const rs=db.riders.filter(r=>r.status!=='مؤرشف').slice().sort((a,b)=>String(a.nameAr).localeCompare(String(b.nameAr),'ar'));
+return rs.map(r=>`<div class="c"><b>${esc(r.nameAr)}</b> <span class="m">${esc(r.riderId)}</span><div class="row" style="margin:6px 0 0">${r.wa?`<button onclick="waQuick('${r.id}')">💬 رسالة</button>`:`<button onclick="riderForm('${r.id}')">➕ أضف رقم واتساب</button>`}</div></div>`).join('')||'<div class="c m">لا يوجد مناديب</div>'}

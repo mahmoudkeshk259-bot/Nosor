@@ -22,3 +22,12 @@ main{max-width:none;margin-left:0}
 :root[data-theme=dark] .g>.c{border-color:#2a4fa8;background:linear-gradient(160deg,#143073,#0a1d4d)}
 nav button.on{background:linear-gradient(90deg,#1e4fc4,#2f6bff);color:#fff;border-color:transparent}
 @media(min-width:980px){nav button{border-color:transparent;background:transparent;color:var(--mu)}nav button:hover{background:#ffffff14;border-color:transparent}nav button.on{color:#fff}}
+/* v3 — قائمة جانبية على الموبايل أيضًا (أيقونات، و☰ لإظهار الأسماء) */
+nav{position:fixed;top:calc(68px + env(safe-area-inset-top,0px));right:0;bottom:0;width:54px;display:flex;flex-direction:column;gap:6px;overflow-x:hidden;overflow-y:auto;padding:10px 6px;background:linear-gradient(180deg,#0b1f52f2,#071436f2);backdrop-filter:blur(10px);border-left:1px solid var(--line);z-index:4;transition:width .2s}
+:root[data-theme=light] nav{background:#fffffff2}
+nav button{position:relative;width:100%;padding:8px 4px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border-color:transparent;background:transparent;text-align:right}
+nav .ni{font-style:normal;font-size:20px}nav .nl{display:none;white-space:nowrap}
+nav.open{width:220px}nav.open button{justify-content:flex-start}nav.open .nl{display:inline}
+nav .bd{position:absolute;top:0;left:0;margin:0;padding:0 5px}
+#reg,main{margin-right:58px}main{max-width:none;margin-left:0}
+@media(min-width:980px){nav{width:232px;padding:14px 10px}nav .nl{display:inline}nav button{justify-content:flex-start}nav .nvt{display:none}#reg,main{margin-right:244px}}
