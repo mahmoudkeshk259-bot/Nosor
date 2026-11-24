@@ -3,13 +3,14 @@
    القوالب والسجل داخل db.cfg (waTpl, waLog, waCool, company, manager) فتتزامن مع Firestore تلقائيًا.
    يعتمد على دوال التطبيق: db, cumMonths, cumAll, tgt, stt, today, esc, modal, closeM, toast, save, render, $, riderForm */
 const WA_DEF=[
-{id:'pace',n:'تأخر عن التارجت',t:'السلام عليكم {الاسم} 👋\nأنجزت {الطلبات} من {التارجت} ({نسبة_الإنجاز}%). المتبقي {المتبقي} والمطلوب يوميًا ≈ {المطلوب_يوميا}.\nنقدر نساعدك بأي شيء؟ — {الشركة}',e:'Hello {الاسم} 👋\nYou completed {الطلبات} of {التارجت} ({نسبة_الإنجاز}%). Remaining: {المتبقي}, required daily ≈ {المطلوب_يوميا}.\nHow can we help? — {الشركة}',ne:'Behind target'},
-{id:'win',n:'تشجيع (حقق التارجت)',t:'ما شاء الله {الاسم} 🔥 حققت تارجتك ({الطلبات}/{التارجت}). شكرًا على جهدك وتميّزك — {الشركة}',e:'Great job {الاسم} 🔥 You hit your target ({الطلبات}/{التارجت}). Thank you for your effort and excellence — {الشركة}',ne:'Encouragement (target hit)'},
-{id:'doc',n:'مستند ينتهي',t:'السلام عليكم {الاسم}، تنبيه: {المستند} {الحالة}. نرجو التجديد وإرسال صورة المستند — {الشركة}',e:'Hello {الاسم}, reminder: your {المستند} {الحالة}. Please renew it and send us a photo — {الشركة}',ne:'Document expiring'},
-{id:'ticket',n:'متابعة بلاغ',t:'السلام عليكم {الاسم}، بخصوص البلاغ #{رقم_البلاغ}: نحتاج تحديثًا منك لإغلاقه. شكرًا — {الشركة}',e:'Hello {الاسم}, regarding ticket #{رقم_البلاغ}: we need an update from you to close it. Thank you — {الشركة}',ne:'Ticket follow-up'},
-{id:'task',n:'مهمة متأخرة',t:'السلام عليكم {الاسم}، تذكير بالمهمة «{المهمة}» وموعدها {الموعد}. نرجو إنجازها وإفادتنا — {الشركة}',e:'Hello {الاسم}, reminder about the task "{المهمة}" due {الموعد}. Please complete it and let us know — {الشركة}',ne:'Overdue task'},
-{id:'welcome',n:'ترحيب وتفعيل',t:'أهلاً بك {الاسم} في {الشركة} 🦅 رقمك {رقم_المندوب}. نحتاج منك المستندات المطلوبة لتفعيل حسابك — {المسؤول}',e:'Welcome {الاسم} to {الشركة} 🦅 Your Rider ID is {رقم_المندوب}. Please send the required documents to activate your account — {المسؤول}',ne:'Welcome and activation'}
-];
+{id:'pace',n:'تأخر عن التارجت',t:'يا {الاسم}، إنت عامل {الطلبات} من {التارجت} وفاضل {المتبقي}. محتاجين منك حوالي {المطلوب_يوميا} كل يوم عشان تلحق. لو في حاجة معطلاك قولّي',e:'Hi {الاسم}, you are at {الطلبات} of {التارجت}, {المتبقي} to go. We need about {المطلوب_يوميا} a day to catch up. If anything is blocking you, tell me',ne:'Behind target'},
+{id:'decline',n:'تراجع المستوى',t:'يا {الاسم}، طلباتك قلت عن الفترة اللي قبلها، كنت بتعمل حوالي {سابق_يومي} في اليوم ودلوقتي {حالي_يومي}. في حاجة محتاجة تتظبط؟ قولّي',e:'Hi {الاسم}, your orders dropped from about {سابق_يومي} a day to {حالي_يومي}. Anything we should fix? Let me know',ne:'Performance decline'},
+{id:'win',n:'تشجيع (حقق التارجت)',t:'ما شاء الله يا {الاسم} 👏 خلصت تارجتك ({الطلبات}/{التارجت}). شغل محترم، ربنا يزيدك',e:'Well done {الاسم} 👏 you finished your target ({الطلبات}/{التارجت}). Great work',ne:'Encouragement (target hit)'},
+{id:'doc',n:'مستند ينتهي',t:'يا {الاسم}، {المستند} {الحالة}. جدده وابعت صورته لو سمحت',e:'Hi {الاسم}, your {المستند} {الحالة}. Please renew it and send a photo',ne:'Document expiring'},
+{id:'ticket',n:'متابعة بلاغ',t:'يا {الاسم}، البلاغ رقم {رقم_البلاغ} لسه محتاج رد منك عشان نقفله',e:'Hi {الاسم}, ticket {رقم_البلاغ} still needs your reply so we can close it',ne:'Ticket follow-up'},
+{id:'task',n:'مهمة متأخرة',t:'يا {الاسم}، مهمة «{المهمة}» ميعادها كان {الموعد}. خلصها ورد علينا',e:'Hi {الاسم}, the task "{المهمة}" was due {الموعد}. Please finish it and let us know',ne:'Overdue task'},
+{id:'welcome',n:'ترحيب وتفعيل',t:'أهلًا بيك يا {الاسم} في {الشركة} 🦅 رقمك {رقم_المندوب}. ابعت المستندات المطلوبة عشان نفعّل حسابك',e:'Welcome {الاسم} to {الشركة} 🦅 Your Rider ID is {رقم_المندوب}. Please send the required documents to activate your account',ne:'Welcome and activation'}
+];;
 const WAS={tab:'al',f:'all',L:[],Q:[],qi:-1,a:null,ta:null};
 const WA_SEV={c:['🔴','حرج'],w:['🟠','تحذير'],i:['🔵','معلومة'],p:['🟢','إيجابي']},WA_ORD={c:0,w:1,i:2,p:3};
 const waTpl=()=>{const u=db.cfg.waTpl||[];return WA_DEF.map(d=>({...d,...(u.find(x=>x.id===d.id)||{})}))};

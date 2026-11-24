@@ -31,3 +31,115 @@ nav.open{width:220px}nav.open button{justify-content:flex-start}nav.open .nl{dis
 nav .bd{position:absolute;top:0;left:0;margin:0;padding:0 5px}
 #reg,main{margin-right:58px}main{max-width:none;margin-left:0}
 @media(min-width:980px){nav{width:232px;padding:14px 10px}nav .nl{display:inline}nav button{justify-content:flex-start}nav .nvt{display:none}#reg,main{margin-right:244px}}
+
+/* ===== v4 — Sanad polish preview (CSS only, no logic change) ===== */
+/* typography and rhythm */
+body{font-size:14.5px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+main{padding:14px;max-width:1180px}
+/* header */
+header{backdrop-filter:blur(10px);box-shadow:0 1px 0 var(--line),0 8px 24px #0004}
+/* cards */
+.c{border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 10px #0003;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
+.c:hover{border-color:#3b63c4;box-shadow:0 6px 20px #0005}
+/* KPI cards */
+.kg{gap:10px;margin-bottom:10px}
+.kc{padding:14px;border:1px solid #ffffff14;box-shadow:0 4px 16px #0005}
+.kc .v{font-size:24px;letter-spacing:.2px}
+.kc .ic{width:42px;height:42px;box-shadow:inset 0 0 0 1px #ffffff14}
+/* banner */
+.bn{box-shadow:0 10px 30px #000a;border-color:#3565d0}
+/* buttons and inputs */
+button,input,select,textarea{border-radius:10px}
+button.p,button.on{background:linear-gradient(135deg,#3a78ff,#1e4fc4);color:#fff;border-color:transparent;box-shadow:0 4px 14px #1e4fc466}
+button.p:hover,button.on:hover{box-shadow:0 6px 18px #1e4fc488;transform:translateY(-1px)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#3a78ff;box-shadow:0 0 0 3px #2f6bff33}
+/* tables */
+table{border-collapse:separate;border-spacing:0}
+th,td{padding:10px 12px}
+tr:hover td{background:#ffffff10}
+/* region pills */
+#reg button{border-radius:99px}
+/* lists */
+.li{padding:9px 0}
+/* modal sheet */
+#m>div{border-radius:18px 18px 0 0;box-shadow:0 -10px 40px #000a}
+/* sidebar active item */
+nav button.on{box-shadow:0 4px 14px #1e4fc455}
+/* login screen */
+#lg>div{box-shadow:0 20px 60px #000c;border:1px solid #ffffff1f;border-radius:20px;padding:26px 22px;background:#0a1c46}
+#lg img{box-shadow:0 8px 30px #0009}
+/* light theme */
+:root[data-theme=light] .c{box-shadow:0 2px 8px #0b1a3310}
+:root[data-theme=light] tr:hover td{background:#0b1a3306}
+:root[data-theme=light] button.p,:root[data-theme=light] button.on{color:#fff}
+/* mobile fine-tuning */
+@media(max-width:520px){
+  .kg{grid-template-columns:repeat(2,1fr)}
+  .kc .v{font-size:21px}
+  th,td{padding:9px 10px}
+}
+
+/* v4.1 — declutter: single brand banner (the richer .bn keeps logo + greeting) */
+.hero{display:none}
+.bn{padding:20px 22px}
+nav{box-shadow:-6px 0 18px #0004}
+@media(min-width:820px){.sec{gap:10px}.c{padding:16px 18px}}
+/* v4.2 — fix pre-existing horizontal overflow on phone */
+html,body{overflow-x:clip}
+main *{max-width:100%}
+img,svg,video{max-width:100%;height:auto}
+/* v4.3 — distinguish attach/upload from primary send actions */
+.up{background:transparent!important;color:var(--mu)!important;border:1px dashed var(--line)!important;font-weight:600}
+.up:hover{color:var(--tx)!important;border-color:#3a78ff!important}
+
+/* v4.4 — responsive fixes from review */
+.bn>*{position:relative;z-index:1}
+.ib svg{width:18px;height:18px;display:block}
+.ib{display:inline-flex;align-items:center;justify-content:center}
+nav .ni{display:inline-flex;align-items:center;justify-content:center}
+@media(max-width:520px){
+  .bn{flex-direction:column;text-align:center;gap:10px;padding:16px 14px}
+  .bn img{width:56px;height:56px}
+  .bn svg{opacity:.12}
+  #reg .row{flex-wrap:wrap!important;overflow-x:visible!important}
+  #reg .row>*{flex:0 1 auto!important}
+  .kg>.kc:last-child:nth-child(odd){grid-column:1/-1}
+  nav{top:auto!important;bottom:0;left:0;width:100%!important;height:auto;min-height:54px;flex-direction:row;justify-content:flex-start;align-items:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));overflow-x:auto;overflow-y:hidden;border-left:0;border-top:1px solid var(--line)}
+  nav.open{width:100%!important}
+  nav button{width:auto;flex:0 0 auto;padding:8px 10px}
+  nav .nvt{display:none!important}
+  #reg,main{margin-right:0!important}
+  main{padding-bottom:76px}
+  .c .w{margin:0 -4px;padding:0 4px;-webkit-overflow-scrolling:touch}
+}
+
+/* ===== v4.6 — الاتجاه D المختار: كحلي + ذهبي (هوية نسور) ===== */
+html:not([data-theme=light]){--bg:#070744;--card:#10105e;--line:#2a2a8a;--tx:#fff6e0;--mu:#b9b9e6;--ac:#f2b705;--bl:#f2b705}
+html:not([data-theme=light]) body{background:radial-gradient(900px 420px at 85% -5%,#2a2a8a55,transparent),radial-gradient(700px 400px at 0% 100%,#10105e66,transparent),var(--bg)}
+html:not([data-theme=light]) .c{border-radius:22px;border-color:#2a2a8a}
+html:not([data-theme=light]) button{border-radius:18px}
+html:not([data-theme=light]) input,html:not([data-theme=light]) select,html:not([data-theme=light]) textarea{border-radius:12px}
+html:not([data-theme=light]) button.p,html:not([data-theme=light]) button.on{background:linear-gradient(135deg,#f2b705,#dda300);color:#10105e;border-color:transparent;box-shadow:0 4px 14px #f2b70540;font-weight:700}
+html:not([data-theme=light]) button.p:hover,html:not([data-theme=light]) button.on:hover{box-shadow:0 6px 18px #f2b70566;border-color:transparent}
+html:not([data-theme=light]) button:hover{border-color:#f2b705}
+html:not([data-theme=light]) input:focus,html:not([data-theme=light]) select:focus,html:not([data-theme=light]) textarea:focus{border-color:#f2b705;box-shadow:0 0 0 3px #f2b70533}
+html:not([data-theme=light]) #reg button.on,html:not([data-theme=light]) nav button.on{background:linear-gradient(135deg,#f2b705,#dda300);color:#10105e;border-color:transparent}
+html:not([data-theme=light]) nav{background:linear-gradient(180deg,#0d0d50f2,#070744f2)}
+html:not([data-theme=light]) header{background:#070744d9}
+html:not([data-theme=light]) .bn{background:linear-gradient(120deg,#10105e,#1a1a72);border-color:#2a2a8a}
+html:not([data-theme=light]) .hero{background:linear-gradient(120deg,#10105e,#1a1a72);border-color:#2a2a8a}
+html:not([data-theme=light]) .kc{background:linear-gradient(160deg,#14146a,#0c0c4e);border-color:#2a2a8a;min-height:110px}
+html:not([data-theme=light]) .kc .ic{background:#f2b7051f;color:#f2b705;box-shadow:inset 0 0 0 1px #f2b70533}
+html:not([data-theme=light]) .kc .ic svg{stroke:#f2b705;fill:none}
+html:not([data-theme=light]) th{color:var(--mu)}
+html:not([data-theme=light]) .up{border-color:#2a2a8a!important;color:var(--mu)!important}
+html:not([data-theme=light]) .up:hover{border-color:#f2b705!important;color:var(--tx)!important}
+html:not([data-theme=light]) a{color:#f2b705}
+/* bottom bar: أيقونة + اسم تحتها على الموبايل */
+@media(max-width:520px){
+  html:not([data-theme=light]) nav button{flex-direction:column;gap:2px;padding:6px 9px}
+  html:not([data-theme=light]) nav .nl{display:block;font-size:10px;font-weight:600}
+  html:not([data-theme=light]) main{padding-bottom:92px}
+}
+/* v4.6b — symmetric desktop side margins */
+@media(min-width:980px){main{margin-left:16px}}
