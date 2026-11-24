@@ -194,3 +194,19 @@ nav.open .pgrp{display:block}
   .gk .m{font-size:11.5px;line-height:1.55}
   .gk .ring{display:none}
 }
+
+/* ===== v6 — التبويب المختار متصل بمساحة الشاشة (جسر ثابت يتجاوز قصّ القائمة) ===== */
+:root[data-theme=dark] main{background:radial-gradient(620px 300px at 50% -70px,rgba(147,197,253,.13),transparent 72%) #102350;border-radius:18px}
+:root[data-theme=light] main{background:#fff;border-radius:18px}
+:root[data-theme=dark] nav button.on{background:#102350;border-color:transparent;color:#fff;box-shadow:inset 0 1px 0 rgba(147,197,253,.16);border-radius:14px 0 0 14px;z-index:2;width:calc(100% + 14px);right:-14px;padding-right:calc(4px + 14px)}
+@media(min-width:980px){:root[data-theme=dark] nav button.on{width:calc(100% + 26px);right:-26px;padding-right:calc(4px + 26px)}}
+:root[data-theme=light] nav button.on{background:#fff;border-color:transparent;color:#0b1a33;box-shadow:none;border-radius:14px 0 0 14px;z-index:2;width:calc(100% + 14px);right:-14px;padding-right:calc(4px + 14px)}
+@media(min-width:980px){:root[data-theme=light] nav button.on{width:calc(100% + 26px);right:-26px;padding-right:calc(4px + 26px)}}
+#tb6{position:fixed;z-index:5;pointer-events:none;display:none}
+:root[data-theme=dark] #tb6{background:#102350;box-shadow:inset 0 1px 0 rgba(147,197,253,.16)}
+:root[data-theme=light] #tb6{background:#fff}
+#tb6::before,#tb6::after{content:"";position:absolute;right:0;width:18px;height:18px}
+:root[data-theme=dark] #tb6::before{top:-18px;background:radial-gradient(circle at 0 0,transparent 18px,#102350 18.5px)}
+:root[data-theme=dark] #tb6::after{bottom:-18px;background:radial-gradient(circle at 0 100%,transparent 18px,#102350 18.5px)}
+:root[data-theme=light] #tb6::before{top:-18px;background:radial-gradient(circle at 0 0,transparent 18px,#fff 18.5px)}
+:root[data-theme=light] #tb6::after{bottom:-18px;background:radial-gradient(circle at 0 100%,transparent 18px,#fff 18.5px)}
