@@ -3,7 +3,7 @@
    القوالب والسجل داخل db.cfg (waTpl, waLog, waCool, company, manager) فتتزامن مع Firestore تلقائيًا.
    يعتمد على دوال التطبيق: db, cumMonths, cumAll, tgt, stt, today, esc, modal, closeM, toast, save, render, $, riderForm */
 const WA_DEF=[
-{id:'pace',n:'تأخر عن التارجت',t:'يا {الاسم}، إنت عامل {الطلبات} من {التارجت} وفاضل {المتبقي}. محتاجين منك حوالي {المطلوب_يوميا} كل يوم عشان تلحق. لو في حاجة معطلاك قولّي',e:'Hi {الاسم}, you are at {الطلبات} of {التارجت}, {المتبقي} to go. We need about {المطلوب_يوميا} a day to catch up. If anything is blocking you, tell me',ne:'Behind target'},
+{id:'pace',n:'تأخر عن التارجت',t:'{الاسم}، عامل إيه؟ وصلت لـ{الطلبات} طلب، وفاضل {المتبقي} على التارجت. إيه اللي مخلي أداءك مش أحسن حاجة؟ هل عندك أي مشكلة؟',e:'Hi {الاسم}, how are you? You reached {الطلبات} orders, {المتبقي} left to target. What is keeping your performance from being its best? Any problem?',ne:'Behind target'},
 {id:'decline',n:'تراجع المستوى',t:'يا {الاسم}، طلباتك قلت عن الفترة اللي قبلها، كنت بتعمل حوالي {سابق_يومي} في اليوم ودلوقتي {حالي_يومي}. في حاجة محتاجة تتظبط؟ قولّي',e:'Hi {الاسم}, your orders dropped from about {سابق_يومي} a day to {حالي_يومي}. Anything we should fix? Let me know',ne:'Performance decline'},
 {id:'win',n:'تشجيع (حقق التارجت)',t:'ما شاء الله يا {الاسم} 👏 خلصت تارجتك ({الطلبات}/{التارجت}). شغل محترم، ربنا يزيدك',e:'Well done {الاسم} 👏 you finished your target ({الطلبات}/{التارجت}). Great work',ne:'Encouragement (target hit)'},
 {id:'doc',n:'مستند ينتهي',t:'يا {الاسم}، {المستند} {الحالة}. جدده وابعت صورته لو سمحت',e:'Hi {الاسم}, your {المستند} {الحالة}. Please renew it and send a photo',ne:'Document expiring'},

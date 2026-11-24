@@ -141,14 +141,16 @@ function nav(){const c=db.tickets.filter(t=>t.status!=='مغلقة').length,b=$(
 function go(v){view=v;render()}
 let REAL=null;
 const real=()=>REAL||db;
-const inA=r=>!st.area||(st.area==='__none'?!r.city:r.city===st.area);
-function scope(rd,a){const R=rd.riders.filter(r=>a==='__none'?!r.city:r.city===a),iid=new Set(R.map(r=>r.id)),rid=new Set(R.map(r=>String(r.riderId)));return{...rd,riders:R,snaps:rd.snaps.filter(s=>rid.has(String(s.rid))),tickets:rd.tickets.filter(t=>iid.has(t.rid)),tasks:rd.tasks.filter(t=>iid.has(t.rid)),docs:rd.docs.filter(d=>iid.has(d.rid)),photos:(rd.photos||[]).filter(p=>iid.has(p.rid))}}
+const inA=r=>!st.area||(st.area==='__none'?!r.city:cKey(r.city)===st.area);
+function scope(rd,a){const R=rd.riders.filter(r=>a==='__none'?!r.city:cKey(r.city)===a),iid=new Set(R.map(r=>r.id)),rid=new Set(R.map(r=>String(r.riderId)));return{...rd,riders:R,snaps:rd.snaps.filter(s=>rid.has(String(s.rid))),tickets:rd.tickets.filter(t=>iid.has(t.rid)),tasks:rd.tasks.filter(t=>iid.has(t.rid)),docs:rd.docs.filter(d=>iid.has(d.rid)),photos:(rd.photos||[]).filter(p=>iid.has(p.rid))}}
 function inScope(fn){const rd=db;try{if(st.area){REAL=rd;db=scope(rd,st.area)}_cc={k:'',v:null};return fn()}finally{db=rd;REAL=null;_cc={k:'',v:null}}}
 function render(){nav();$('#reg').innerHTML=regBar();$('#app').innerHTML=inScope(()=>({ops,dash,riders,idx,perf,tickets,tasks,maint,set,wa:typeof waCenter==='function'?waCenter:()=>''})[view]())}
 const RSLUG={'العلا':'alula','alula':'alula','AlUla':'alula','أبها':'abha','Abha':'abha','abha':'abha'};
-function regList(){const rd=real(),L=((rd.cfg.regions)||[]).map(x=>({...x}));const have=new Set(L.map(x=>x.name));rd.riders.forEach(r=>{if(r.city&&!have.has(r.city)){have.add(r.city);L.push({id:RSLUG[r.city]||'r_'+hash(r.city),name:r.city,status:'نشطة'})}});return L.sort((x,y)=>(y.name==='العلا')-(x.name==='العلا'))}
+const CITY_CANON={'al ula':'العلا','alula':'العلا','al-ula':'العلا'};
+function cKey(c){const k=String(c||'').trim().replace(/\s+/g,' ');return CITY_CANON[k.toLowerCase()]||c}
+function regList(){const rd=real(),L=((rd.cfg.regions)||[]).map(x=>({...x}));const have=new Set(L.map(x=>x.name));rd.riders.forEach(r=>{const ck=r.city&&cKey(r.city);if(ck&&!have.has(ck)){have.add(ck);L.push({id:RSLUG[ck]||'r_'+hash(ck),name:ck,status:'نشطة'})}});return L.sort((x,y)=>(y.name==='العلا')-(x.name==='العلا'))}
 function areas(){return regList().filter(x=>x.status!=='مؤرشفة').map(x=>x.name)}
-function regBar(){const rd=real(),A=areas(),none=rd.riders.filter(r=>!r.city).length,c=a=>rd.riders.filter(r=>r.city===a).length;
+function regBar(){const rd=real(),A=areas(),none=rd.riders.filter(r=>!r.city).length,c=a=>rd.riders.filter(r=>cKey(r.city)===a).length;
 return`<div class="row" style="flex-wrap:nowrap;overflow-x:auto"><button class="${!st.area?'p':''}" onclick="st.area='';render()">كل المناطق (${rd.riders.length})</button>${A.map((a,i)=>`<button class="${st.area===a?'p':''}" onclick="st.area=areas()[${i}];render()">${esc(a)} (${c(a)})</button>`).join('')}${none?`<button class="${st.area==='__none'?'p':''}" onclick="st.area='__none';render()">بدون منطقة (${none})</button>`:''}<button onclick="addArea()">+ منطقة جديدة</button></div>${st.area&&st.area!=='__none'?`<div class="m" style="margin:4px 2px">المنطقة المختارة: <b>${esc(st.area)}</b> — كل الصفحات تعرض بيانات هذه المنطقة فقط</div>`:''}`}
 const rBy=rid=>db.riders.find(r=>String(r.riderId)===String(rid));
 const rName=id=>{const r=db.riders.find(x=>x.id===id);return r?r.nameAr:'—'};
@@ -166,7 +168,7 @@ function cumMonths(){return[...new Set(db.imports.filter(i=>i.from.slice(0,7)===
 function gapsTxt(ims){if(!ims.length)return'';const cov=new Set();let mn='9',mx='';ims.forEach(i=>{if(i.from<mn)mn=i.from;if(i.to>mx)mx=i.to;for(let d=new Date(i.from+'T00:00:00Z');d<=new Date(i.to+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+1))cov.add(d.toISOString().slice(0,10))});
 const miss=[];for(let d=new Date(mn+'T00:00:00Z');d<=new Date(mx+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+1)){const s=d.toISOString().slice(0,10);if(!cov.has(s))miss.push(s)}
 if(!miss.length)return'';const R=[];let a=miss[0],p=a;for(let i=1;i<=miss.length;i++){const c=miss[i];if(c&&(new Date(c)-new Date(p))/864e5===1){p=c;continue}R.push(a===p?a:a+' → '+p);a=c;p=c}return R.join('، ')}
-function rcf(r){const a=r&&r.city;if(!a||a==='العلا')return null;return(db.cfg.rcfg||{})[a]||{}}
+function rcf(r){const a=r&&r.city&&cKey(r.city);if(!a||a==='العلا')return null;return(db.cfg.rcfg||{})[a]||null}
 function vtgt(r){const x=Number(r&&r.target);if(x)return x;const g=rcf(r)||db.cfg;return r&&r.vtype==='سيارة'?(+g.tgtCar||0):r&&r.vtype==='دباب'?(+g.tgtMoto||0):0}
 function tgt(r){const v=vtgt(r);if(v)return v;const g=rcf(r)||db.cfg;return Number(g.target)||0}
 function stt(c,last,t){if(c==null||!t||!last)return['البيانات غير كافية',''];if(c>=t)return['جيد','ok'];const e=new Date(last),dim=new Date(e.getFullYear(),e.getMonth()+1,0).getDate(),x=t*e.getDate()/dim,q=c/x;return q>=.9?['جيد','ok']:['يحتاج إلى متابعة','wn']}
@@ -174,7 +176,7 @@ function status(sn,r){const m=sn.to.slice(0,7),C=cumAll(m),o=C.out[sn.rid];retur
 function cumCard(){const ms=cumMonths();if(!ms.length)return'';const m=st.cm&&ms.includes(st.cm)?st.cm:ms[ms.length-1],C=cumAll(m);
 const rows=db.riders.map(r=>({r,o:C.out[String(r.riderId)]})).filter(x=>x.o).sort((a,b)=>b.o.o-a.o.o);
 const un=Object.keys(C.out).filter(k=>!rBy(k)).length,g=gapsTxt(C.ims);
-return`<div class="c"><b>التراكمي للشهر</b> <select onchange="st.cm=this.value;render()">${ms.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select> <button onclick="exportCumXlsx('${m}')">⬇ تصدير التراكمي (Excel)</button>
+return`<div class="c"><b>التراكمي للشهر</b> <select onchange="st.cm=this.value;render()">${ms.map(x=>`<option ${x===m?'selected':''}>${x}</option>`).join('')}</select> <button onclick="exportCumXlsx('${m}')">⬇ تصدير التراكمي (Excel)</button> <button onclick="exportWeekly()">⬇ تصدير التحليل الأسبوعي (Excel)</button>
 <div class="m">التقارير المضافة: ${C.ims.slice().sort((a,b)=>a.from<b.from?-1:1).map(i=>i.from+' → '+i.to).join('، ')} — آخر يوم مغطى: ${C.last}</div>
 ${g?`<div class="wn">أيام غير مغطاة بتقارير: ${g}</div>`:''}
 <div class="w"><table><tr><th>Rider ID</th><th>المندوب</th><th>الطلبات حتى الآن</th><th>التارجت</th><th>المتبقي</th><th>الإنجاز</th><th>الحالة</th></tr>
@@ -184,7 +186,7 @@ ${un?`<div class="m">${un} Rider ID في التقارير غير مسجلين ف
 function delImp(id){st.dq=null;db.imports=db.imports.filter(i=>i.id!==id);db.snaps=db.snaps.filter(s=>s.imp!==id);st.imp=null;save();render()}
 function latestImp(){return db.imports.length?db.imports[db.imports.length-1]:null}
 
-function regionStats(a){const rd=db;let o;try{db=scope(rd,a);_cc={k:'',v:null};const R=db.riders,li=latestImp(),C=li?cumAll(li.to.slice(0,7)):null;let ord=0,ordT=0,tg=0;R.forEach(r=>{const x=C&&C.out[String(r.riderId)],t=tgt(r);if(x)ord+=x.o;if(x&&t){ordT+=x.o;tg+=t}});o={n:R.length,act:R.filter(r=>r.status==='نشط').length,ord,tg,pct:tg?Math.round(ordT/tg*100):null,tk:db.tickets.filter(t=>t.status!=='مغلقة').length}}finally{db=rd;_cc={k:'',v:null}}return o}
+function regionStats(a){const rd=db;let o;try{db=scope(rd,a);_cc={k:'',v:null};const R=db.riders,li=latestImp(),C=li?cumAll(li.to.slice(0,7)):null;let ord=0,ordT=0,tg=0;R.forEach(r=>{const x=C&&C.out[String(r.riderId)],t=tgt(r);if(x)ord+=x.o;if(x&&t){ordT+=x.o;tg+=(r.status==='موقوف'?Math.min(x.o,t):t)}});o={n:R.length,act:R.filter(r=>r.status==='نشط').length,ord,tg,pct:tg?Math.round(ordT/tg*100):null,tk:db.tickets.filter(t=>t.status!=='مغلقة').length}}finally{db=rd;_cc={k:'',v:null}}return o}
 function ago(iso){const m=Math.max(0,Math.round((Date.now()-new Date(iso))/6e4));return m<1?'الآن':m<60?'منذ '+m+' دقيقة':m<1440?'منذ '+Math.round(m/60)+' ساعة':'منذ '+Math.round(m/1440)+' يوم'}
 function ring(p,col,sz){const r=42,c=2*Math.PI*r,v=p==null?0:Math.min(100,p);return`<div class="ring" style="${sz?`width:${sz}px;height:${sz}px`:''}"><svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="${r}" fill="none" stroke="#ffffff1c" stroke-width="9"/><circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${c*v/100} ${c}"/></svg><b>${p==null?'—':p+'%'}</b></div>`}
 function bars(items){const mx=Math.max(1,...items.flatMap(x=>[x.a,x.b||0]));return`<div class="lg2"><span><i style="background:#3b78ff"></i>الطلبات</span><span><i style="background:#f5b942"></i>التارجت</span></div><div class="ch">${items.map(x=>`<div class="bc"><div class="bp"><i style="height:${Math.round(x.a/mx*100)}%;background:linear-gradient(#5b8dff,#2f6bff)" title="${x.a}"></i><i style="height:${Math.round((x.b||0)/mx*100)}%;background:linear-gradient(#ffd166,#f5b942)" title="${x.b||0}"></i></div><div class="bl">${esc(x.l)}</div></div>`).join('')}</div>`}
@@ -252,7 +254,7 @@ function addArea(){modal(`<h3>منطقة جديدة</h3><div class="row"><div><l
 function saveArea(){const n=$('#an').value.trim();if(!n)return toast('اكتب اسم المنطقة');if(regList().some(x=>x.name===n))return toast('المنطقة موجودة بالفعل');regSave({name:n,nameEn:$('#ane').value.trim(),manager:$('#anm').value.trim()});st.area=n;save();closeM();render()}
 function editArea(){const x=regList().find(r=>r.name===st.area);if(!x)return;const isA=x.name==='العلا',g=(real().cfg.rcfg||{})[x.name]||{};modal(`<h3>إعدادات منطقة ${esc(x.name)} <span class="m">${esc(x.id)}</span></h3><div class="row"><div><label>الاسم بالإنجليزية</label><input id="en" dir="ltr" value="${esc(x.nameEn||'')}"></div><div><label>المسؤول</label><input id="em" value="${esc(x.manager||'')}"></div><div><label>الحالة</label><select id="es">${['نشطة','غير نشطة','مؤرشفة'].map(s=>`<option ${s===(x.status||'نشطة')?'selected':''}>${s}</option>`).join('')}</select></div></div>${isA?'<div class="m">العلا تستخدم الإعدادات العامة للتارجت (صفحة الإعدادات) ولم يتغير شيء فيها.</div>':`<div class="row"><div><label>تارجت الدباب الشهري</label><input id="et1" type="number" value="${g.tgtMoto||''}"></div><div><label>تارجت السيارة الشهري</label><input id="et2" type="number" value="${g.tgtCar||''}"></div><div><label>التارجت الافتراضي</label><input id="et3" type="number" value="${g.target||''}"></div></div><div class="m">لو التارجت فاضي، المندوب لا يُصنَّف مقصّرًا (بيانات غير كافية).</div>`}<div class="row"><div><label>ملاحظات</label><input id="eo" value="${esc(x.note||'')}"></div></div><div class="row"><button class="p" onclick="saveEdit()">حفظ</button><button onclick="closeM()">إلغاء</button></div>`)}
 function saveEdit(){const n=st.area;regSave({name:n,nameEn:$('#en').value.trim(),manager:$('#em').value.trim(),status:$('#es').value,note:$('#eo').value.trim()});if($('#et1')){const c=db.cfg;c.rcfg=c.rcfg||{};c.rcfg[n]={tgtMoto:+$('#et1').value||0,tgtCar:+$('#et2').value||0,target:+$('#et3').value||0}}if($('#es').value==='مؤرشفة')st.area='';save();closeM();render();toast('تم الحفظ')}
-function delArea(i){const a=areas()[i];if(!a)return;if(real().riders.some(r=>r.city===a))return toast('المنطقة فيها مناديب — انقلهم أو احذفهم أولا (أو أرشف المنطقة من الإعدادات)');ask('حذف منطقة «'+a+'»؟',()=>{db.cfg.regions=(db.cfg.regions||[]).filter(x=>x.name!==a);db.cfg.areas=(db.cfg.areas||[]).filter(x=>x!==a);st.area='';save();render()},'حذف')}
+function delArea(i){const a=areas()[i];if(!a)return;if(real().riders.some(r=>cKey(r.city)===a))return toast('المنطقة فيها مناديب — انقلهم أو احذفهم أولا (أو أرشف المنطقة من الإعدادات)');ask('حذف منطقة «'+a+'»؟',()=>{db.cfg.regions=(db.cfg.regions||[]).filter(x=>x.name!==a);db.cfg.areas=(db.cfg.areas||[]).filter(x=>x!==a);st.area='';save();render()},'حذف')}
 function bulkForm(){modal(`<h3>إضافة جماعية${st.area?' — '+esc(st.area):''}</h3><div class="m">سطر لكل مندوب: الاسم، رقم الجوال، Rider ID (بأي ترتيب، مفصولة بفاصلة أو Tab). المنطقة تُسجَّل تلقائيا.</div><textarea id="bk" rows="10" style="width:100%;box-sizing:border-box"></textarea><div class="row"><button class="p" onclick="bulkSave()">إضافة</button><button onclick="closeM()">إلغاء</button></div>`)}
 function bulkSave(){const area=st.area||'',en=s=>s.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)),L=$('#bk').value.split(/\n+/).map(s=>s.trim()).filter(Boolean);let ok=0,dup=0,bad=0;const now=new Date().toISOString();
 L.forEach(l=>{let id='',ph='';const nm=[];l.split(/[,،\t|;]+|\s+-\s+/).map(s=>s.trim()).filter(Boolean).forEach(x=>{const d=en(x).replace(/[\s-]/g,'');if(/^(\+?966|0)?5\d{8}$/.test(d))ph=d;else if(/^\d{5,9}$/.test(d))id=d;else nm.push(x)});
@@ -426,11 +428,11 @@ async function saveFile(name,blob){let d=null;try{d=(typeof claude!=='undefined'
 if(d){try{await d.save({filename:name,data:blob});toast('تم حفظ الملف')}catch(e){if(!e||e.code!=='declined')toast('تعذر حفظ الملف')}return}
 const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click()}
 function exportRidersXlsx(){if(typeof XLSX==='undefined')return toast('تعذر تحميل مكتبة Excel');if(!db.riders.length)return toast('لا يوجد مناديب للتصدير');
-const h=[...F.map(f=>f[1]),'الحالة'];const rows=db.riders.map(r=>[...F.map(([k])=>r[k]==null?'':String(r[k])),r.status||'']);
+const h=[...F.map(f=>f[1]),'الحالة'];const rows=db.riders.filter(r=>r.status!=='موقوف').map(r=>[...F.map(([k])=>r[k]==null?'':String(r[k])),r.status||'']);const stN=db.riders.length-rows.length;
 const ws=XLSX.utils.aoa_to_sheet([h,...rows]);ws['!cols']=h.map((x,i)=>({wch:i===F.length-1?55:20}));
 const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'المناديب');
 const out=XLSX.write(wb,{type:'array',bookType:'xlsx'});
-saveFile('riders_'+today()+'.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))}
+saveFile('riders_'+today()+'.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));if(stN)setTimeout(()=>toast('تم استبعاد '+stN+' مندوب موقوف من الشيت — بياناتهم محفوظة في التطبيق'),2700)}
 function exportReportsXlsx(){if(typeof XLSX==='undefined')return toast('تعذر تحميل مكتبة Excel');if(!db.snaps.length)return toast('لا توجد تقارير للتصدير');
 const h=['من تاريخ','إلى تاريخ','الملف','Rider ID','اسم المندوب','المدينة','المركبة','الشفتات','أيام العمل','ساعات العمل الفعلية','الطلبات المكتملة','الريت','رقم الواتساب'];
 const imp=id=>db.imports.find(i=>i.id===id)||{};const nv=x=>{const n=num(x);return n==null?(x==null?'':String(x)):n};
@@ -441,13 +443,13 @@ const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_
 const out=XLSX.write(wb,{type:'array',bookType:'xlsx'});
 saveFile('reports_'+today()+'.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))}
 function exportCumXlsx(m){if(typeof XLSX==='undefined')return toast('تعذر تحميل مكتبة Excel');const C=cumAll(m);
-const rs=db.riders.map(r=>({r,o:C.out[String(r.riderId)]})).filter(x=>x.o).sort((a,b)=>b.o.o-a.o.o);if(!rs.length)return toast('لا توجد بيانات تراكمية لهذا الشهر');
+const rs=db.riders.map(r=>({r,o:C.out[String(r.riderId)]})).filter(x=>x.o&&x.r.status!=='موقوف').sort((a,b)=>b.o.o-a.o.o);if(!rs.length)return toast('لا توجد بيانات تراكمية لهذا الشهر');const stN2=db.riders.filter(r=>r.status==='موقوف'&&C.out[String(r.riderId)]).length;
 const h=['Rider ID','اسم المندوب','المدينة','الطلبات حتى الآن','الساعات','التارجت','المتبقي','الإنجاز %','الحالة','آخر يوم مغطى','رقم الواتساب'];
 const rows=rs.map(({r,o})=>{const t=tgt(r);return[String(r.riderId),r.nameAr,r.city||'',o.o,Math.round(o.h*100)/100,t||'',t?Math.max(0,t-o.o):'',t?Math.round(o.o/t*100):'',stt(o.o,C.last,t)[0],C.last,r.wa||'']});
 const ws=XLSX.utils.aoa_to_sheet([h,...rows]);ws['!cols']=h.map((x,i)=>({wch:i===1?28:i===8?22:16}));
 const wb=XLSX.utils.book_new();wb.Workbook={Views:[{RTL:true}]};XLSX.utils.book_append_sheet(wb,ws,'التراكمي '+m);
 const out=XLSX.write(wb,{type:'array',bookType:'xlsx'});
-saveFile('cumulative_'+m+'.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))}
+saveFile('cumulative_'+m+'.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));if(stN2)setTimeout(()=>toast('تم استبعاد '+stN2+' مندوب موقوف من الشيت — بياناتهم محفوظة في التطبيق'),2700)}
 const TC=['تفعيل الحساب','الشفتات','الطلبات','الخصومات','كروت التشغيل','المركبات','المستندات','المعدات','أخرى'];
 const TS=['جديدة','قيد المراجعة','تم الإرسال للدعم','بانتظار الرد','مطلوب استكمال بيانات','تم الحل بانتظار التأكيد','مغلقة','أُعيد فتحها'];
 function riderOpts(s){return'<option value="">— بدون —</option>'+db.riders.map(r=>`<option value="${r.id}" ${r.id===s?'selected':''}>${esc(r.nameAr)} (${esc(r.riderId)})</option>`).join('')}
@@ -647,17 +649,18 @@ out.unshift(new File([buf],name,{type:'application/vnd.openxmlformats-officedocu
 }catch(e){toast('تعذر إنشاء الشيت')}
 return out}
 async function mSend(kind,id){
-if(kind==='q'){
+if(kind==='q'||kind==='i'){
 const r=db.riders.find(x=>x.id===MR);if(!r)return toast('اختر المندوب');
-if(!String(MP).trim())return toast('اكتب المشكلة');
+if(kind==='q'&&!String(MP).trim())return toast('اكتب المشكلة');
 const iq=String(MQ).replace(/\D/g,'');r.iqama=iq;r.iban=String(MI).replace(/\s/g,'').toUpperCase();
 toast('جاري تجهيز الشيت…');
 const att=MF?await attData(MF):null;
-const rows=qInfo(r,String(MP).trim(),r.iban,iq);
-const fl=await mFiles2('عرض سعر صيانة — '+r.nameAr,rows,att?[att]:[],'quote_'+r.riderId+'_'+today()+'.xlsx');
-const ok=await mShare(fl,mTxt('عرض سعر صيانة',rows),'عرض سعر صيانة — '+r.nameAr);if(!ok)return;
-db.maint=db.maint||[];db.maint.push({id:uid(),rid:r.id,qAt:today(),iAt:'',prob:String(MP).trim(),iban:r.iban,qAtt:att});
-MF=null;MR='';MP='';MI='';MQ='';save();render();return}
+const isQ=kind==='q',T=isQ?'عرض سعر صيانة':'فاتورة ضريبية — صيانة';
+const rows=isQ?qInfo(r,String(MP).trim(),r.iban,iq):mInfo(r).concat([['المشكلة',String(MP).trim()||'—'],['تاريخ الفاتورة',today()]]);
+const fl=await mFiles2(T+' — '+r.nameAr,rows,att?[att]:[],(isQ?'quote_':'invoice_')+r.riderId+'_'+today()+'.xlsx');
+const ok=await mShare(fl,mTxt(T,rows),T+' — '+r.nameAr);if(!ok)return;
+db.maint=db.maint||[];db.maint.push({id:uid(),rid:r.id,qAt:today(),iAt:isQ?'':today(),prob:String(MP).trim(),iban:r.iban,qAtt:isQ?att:null,iAtt:isQ?null:att});
+MF=null;MR='';MP='';MI='';MQ='';MD='q';save();render();return}
 const m=(db.maint||[]).find(x=>x.id===id),r=m&&db.riders.find(x=>x.id===m.rid);
 if(!m||!r)return toast('الطلب غير موجود');
 const withQ=kind==='q2'||kind==='a',withI=kind==='i2'||kind==='a';
@@ -808,7 +811,7 @@ shPush=async function(force){const r=await _shPush45(force);attRetryAll().catch(
 window.addEventListener('online',()=>attRetryAll().catch(()=>{}));
 const _mSend45=mSend;
 mSend=async function(kind,id){
-if(kind!=='q'){
+if(kind!=='q'&&kind!=='i'){
 const m=(db.maint||[]).find(x=>x.id===id);if(!m)return toast('الطلب غير موجود');
 const need=[];
 if(kind==='q2'||kind==='a')need.push(['عرض السعر',m.qAtt]);
@@ -823,13 +826,16 @@ const _mDel45=mDel;
 mDel=function(id){const m=(db.maint||[]).find(x=>x.id===id);if(m){if(m.qAtt&&m.qAtt.key)attFsDel(m.qAtt.key);if(m.iAtt&&m.iAtt.key)attFsDel(m.iAtt.key)}return _mDel45(id)};
 function maint(){const r=db.riders.find(x=>x.id===MR),L=(db.maint||[]).filter(m=>db.riders.some(x=>x.id===m.rid)).slice().reverse(),AC='image/*,application/pdf',miss=r&&(!MQ||!MI);
 return`<div class="c"><label>📱 رقم واتساب المحاسب (يتحفظ)</label><input type="tel" inputmode="tel" placeholder="05xxxxxxxx" value="${esc((db.cfg&&db.cfg.accWa)||'')}" onchange="accSave(this.value)"></div>
-<div class="c"><b>① عرض السعر</b><div style="margin-top:8px"><label>المندوب</label><select onchange="mPick(this.value)"><option value="">— اختر المندوب —</option>${db.riders.filter(x=>x.status!=='مؤرشف').map(x=>`<option value="${x.id}" ${x.id===MR?'selected':''}>${esc(x.nameAr)} (${esc(x.riderId)})</option>`).join('')}</select></div>
-${r?`<div class="m" style="margin-top:10px">اختر المشكلة (أو اكتبها)</div><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${PR.map((x,i)=>`<button type="button" onclick="mProb(${i})">${x}</button>`).join('')}</div>
+<div class="c"><b>طلب صيانة جديد</b>
+<div class="m" style="margin-top:8px">عندك أنهي مستند؟ (الاتنين مستقلين — مفيش ترتيب إجباري، والتاني يتضاف بعدين من كارت الطلب)</div>
+<div class="row" style="margin-top:6px;gap:6px"><button type="button" class="${MD==='i'?'':'p'}" style="flex:1" onclick="MD='q';MF=null;render()">عرض السعر</button><button type="button" class="${MD==='i'?'p':''}" style="flex:1" onclick="MD='i';MF=null;render()">فاتورة الصيانة</button></div>
+<div style="margin-top:8px"><label>المندوب</label><select onchange="mPick(this.value)"><option value="">— اختر المندوب —</option>${db.riders.filter(x=>x.status!=='مؤرشف').map(x=>`<option value="${x.id}" ${x.id===MR?'selected':''}>${esc(x.nameAr)} (${esc(x.riderId)})</option>`).join('')}</select></div>
+${r?`<div class="m" style="margin-top:10px">${MD==='i'?'المشكلة (اختياري)':'اختر المشكلة (أو اكتبها)'}</div><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${PR.map((x,i)=>`<button type="button" onclick="mProb(${i})">${x}</button>`).join('')}</div>
 <textarea id="mprob" rows="2" style="margin-top:6px" placeholder="المشكلة" oninput="MP=this.value;mPrev()">${esc(MP)}</textarea>
 ${(miss||ME)?`<label style="margin-top:8px">رقم الإقامة</label><input dir="ltr" inputmode="numeric" value="${esc(MQ)}" oninput="MQ=this.value;mPrev()"><label style="margin-top:8px">الآيبان</label><input dir="ltr" placeholder="SA..." value="${esc(MI)}" oninput="MI=this.value;mPrev()">`:`<button type="button" style="margin-top:8px" onclick="ME=true;render()">✏️ تعديل الإقامة / الآيبان</button>`}
-<div class="m" style="margin-top:10px">الرسالة اللي هتتبعت:</div><div id="mprev" style="white-space:pre-wrap;margin-top:4px;padding:10px;border:1px solid rgba(128,128,128,.35);border-radius:10px">${esc(mPrevTxt())}</div>
-<div class="row" style="margin-top:10px"><label class="up">📎 صورة عرض السعر<input type="file" accept="${AC}" hidden onchange="MF=this.files[0]||null;render()"></label><span class="m">${MF?'✔ '+esc(MF.name):''}</span></div>
-<button class="p" style="width:100%;margin-top:8px" onclick="mSend('q')">📊 إرسال شيت للمحاسب</button>`:''}</div>
+${MD==='i'?`<div class="row" style="margin-top:10px"><label class="up">📎 صورة الفاتورة (اختياري)<input type="file" accept="${AC}" hidden onchange="MF=this.files[0]||null;render()"></label><span class="m">${MF?'✔ '+esc(MF.name):''}</span></div>`:`<div class="m" style="margin-top:10px">رسالة عرض السعر اللي هتتبعت للمحاسب (اختياري):</div><div id="mprev" style="white-space:pre-wrap;margin-top:4px;padding:10px;border:1px solid rgba(128,128,128,.35);border-radius:10px">${esc(mPrevTxt())}</div>
+<div class="row" style="margin-top:10px"><label class="up">📎 صورة عرض السعر (اختياري)<input type="file" accept="${AC}" hidden onchange="MF=this.files[0]||null;render()"></label><span class="m">${MF?'✔ '+esc(MF.name):''}</span></div>`}
+<div class="row" style="margin-top:8px;gap:6px"><button class="p" style="flex:1" onclick="mCreate()">➕ إنشاء الطلب بدون إرسال</button><button class="p" style="flex:1" onclick="mSend(MD==='i'?'i':'q')">${MD==='i'?'📊 إنشاء + إرسال الفاتورة + بيانات المندوب':'📊 إنشاء + إرسال عرض السعر للمحاسب'}</button></div>`:''}</div>
 <h4>طلبات الصيانة</h4>${L.map(m=>{const qa=m.qAtt,ia=m.iAtt,qok=!!qa,iok=!!ia,qleg=!!(qa&&qa.d),ileg=!!(ia&&ia.d);return`<div class="c"><b>${esc(rName(m.rid))}</b> <span class="m">طلب بتاريخ ${esc(m.qAt)}</span>${m.prob?`<div class="m">المشكلة: ${esc(m.prob)}</div>`:''}
 <div class="c" style="margin-top:8px"><div class="${qok?'ok':'wn'}">① عرض السعر — ${qok?attStLabel(qa):'لم يُرفق بعد'}</div>
 <div class="row" style="margin-top:6px"><label class="up">📎 ${qok?'استبدال':'رفع'} عرض السعر<input type="file" accept="${AC}" hidden onchange="mUp('${m.id}','q',this.files[0])"></label>${qok?`<button onclick="attOpen('${m.id}','q')">👁 عرض</button><button class="p" onclick="mSend('q2','${m.id}')">📊 إرسال عرض السعر</button>`:''}</div></div>
@@ -902,6 +908,265 @@ if(typeof perf==='function'&&!window.__perfDeclineW){
       (M.length?'<div class="c" style="margin-top:10px"><b>⚠ غير موجودين في آخر تقرير — تأكد إن التقرير كامل</b>'+
       M.map(d=>`<div class="m" style="margin-top:6px"><b>${esc(d.r.nameAr)}</b> <span class="m">${esc(d.r.riderId)}</span> — غائب عن ${d.curRange}؛ كان ~${d.prevRate.toFixed(1)} طلب/يوم (${d.prevTot} في ${d.dp} يوم) في ${d.prevRange}</div>`).join('')+'</div>':'')}
   }
+</script>
+<script>
+/* v4.8 — إنشاء طلب الصيانة بدون إرسال: فصل الإنشاء عن الإرسال حتى يمكن رفع/إرسال عرض السعر أو الفاتورة بشكل مستقل من أول لحظة */
+var MD='q';
+async function mCreate(){
+const r=db.riders.find(x=>x.id===MR);if(!r)return toast('اختر المندوب');
+if(MD!=='i'&&!String(MP).trim())return toast('اكتب المشكلة');
+const iq=String(MQ).replace(/\D/g,'');r.iqama=iq;r.iban=String(MI).replace(/\s/g,'').toUpperCase();
+const att=MF?await attData(MF):null;
+db.maint=db.maint||[];db.maint.push({id:uid(),rid:r.id,qAt:today(),iAt:'',prob:String(MP).trim(),iban:r.iban,qAtt:MD==='i'?null:att,iAtt:MD==='i'?att:null});
+MF=null;MR='';MP='';MI='';MQ='';MD='q';save();render();toast('تم إنشاء الطلب — ارفع أو أرسل عرض السعر أو الفاتورة من كارت الطلب')}
+/* ترحيل قوالب واتساب المحفوظة المطابقة حرفيًا للافتراضي القديم فقط — القوالب المخصصة لا تُمس */
+function waHash(s){let x=5381;s=String(s);for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))>>>0;return x.toString(36)}
+const WA_OLD_H={pace:{t:'oxa87q',e:'bji3f2'},win:{t:'lln8nl',e:'1ba1g5t'},doc:{t:'pbpa40',e:'16bxxeq'},ticket:{t:'1sghhty',e:'i3iw3g'},task:{t:'1p4qdh1',e:'ooih0o'},welcome:{t:'1uh064d',e:'1rmgvqs'}};
+function waTplMigrate(){
+try{
+if(typeof db==='undefined'||!db.cfg||!Array.isArray(db.cfg.waTpl))return;
+let ch=false;const keep=[];
+db.cfg.waTpl.forEach(o=>{
+if(!o||!o.id){keep.push(o);return}
+const od=WA_OLD_H[o.id];if(!od){keep.push(o);return}
+if(o.t!=null&&waHash(o.t)===od.t){delete o.t;ch=true}
+if(o.e!=null&&waHash(o.e)===od.e){delete o.e;ch=true}
+if(o.t==null&&o.e==null){ch=true;return}
+keep.push(o)});
+if(ch){db.cfg.waTpl=keep;save()}
+}catch(e){}}
+waTplMigrate();
+{const _p48=shPull;shPull=async function(){const r=await _p48.apply(this,arguments);waTplMigrate();return r}}
+</script>
+
+<script>
+/* ===== v5 — الاتجاه المعتمد: تنقل زجاجي مجمّع + لوحة محلل تحليلية (بيانات حقيقية فقط) ===== */
+(function(){
+const GRP5=[['الرئيسية',['dash']],['التشغيل',['ops','perf']],['المناديب',['riders','idx']],['المتابعة',['tickets','tasks','maint','wa']],['النظام',['set']]];
+const IC5={dash:'home',ops:'chart',perf:'trend',riders:'users',idx:'card',tickets:'alert',tasks:'check',maint:'wrench',wa:'bell',set:'gear'};
+const RAIL5=['dash','ops','riders','maint','wa','set'];
+window.nav=function(){
+  const c=db.tickets.filter(t=>t.status!=='مغلقة').length,b=document.getElementById('bc');if(b){b.textContent=c;b.style.display=c?'':'none'}
+  const h=['<button class="nvt" onclick="this.parentNode.classList.toggle(\'open\')">☰</button>'];
+  GRP5.forEach(g=>{h.push('<div class="pgrp">'+g[0]+'</div>');
+    g[1].forEach(k=>{const e=V.find(x=>x[0]===k);if(!e)return;const n=e[1].replace(/^\S+\s/,'');
+      h.push('<button class="'+(k===view?'on':'')+'"'+(RAIL5.indexOf(k)>=0?'':' data-r')+' onclick="this.parentNode.classList.remove(\'open\');go(\''+k+'\')"><i class="ni">'+(typeof SVGS!=='undefined'&&SVGS[IC5[k]]?SVGS[IC5[k]]:'')+'</i><span class="nl">'+esc(n)+'</span></button>')})});
+  document.getElementById('nav').innerHTML=h.join('');
+  try{if(typeof waAlerts==='function'){const n2=waAlerts().filter(a=>a.s==='c'&&!a.rec).length;const bs=document.querySelectorAll('#nav button');for(let i=0;i<bs.length;i++){if(/go\('wa'\)/.test(bs[i].getAttribute('onclick')||'')){if(n2)bs[i].insertAdjacentHTML('beforeend','<span class="bd">'+n2+'</span>');break}}}}catch(e){}
+};
+const pctCol5=p=>p==null?'#6b7a99':p>=90?'#34d399':p>=60?'#93c5fd':'#fbbf24';
+const d5ic=k=>'<div class="gi">'+(typeof SVGS!=='undefined'&&SVGS[k]?SVGS[k]:'')+'</div>';
+const gk5=(ic,l,v,s)=>'<div class="c gk">'+d5ic(ic)+'<div style="min-width:0"><div class="m">'+l+'</div><div class="k">'+v+'</div>'+(s?'<div class="m" style="font-size:11px">'+s+'</div>':'')+'</div></div>';
+window.dash=function(){
+  const R=db.riders;
+  const li=latestImp(),CM=li?cumAll(li.to.slice(0,7)):null;
+  const m=li?li.to.slice(0,7):'';
+  const rs=R.map(r=>{const x=CM&&CM.out[String(r.riderId)];return{r,o:x?x.o:null,h:x?x.h:null,t:tgt(r)}});
+  let ord=0,ordT=0,tg=0;rs.forEach(x=>{if(x.o!=null)ord+=x.o;if(x.o!=null&&x.t){ordT+=x.o;tg+=(x.r.status==='موقوف'?Math.min(x.o,x.t):x.t)}});
+  const pct=tg?Math.round(ordT/tg*100):null;
+  let attN=0,attD=0;
+  if(li){const ids=new Set(db.snaps.filter(s=>s.imp===li.id).map(s=>String(s.rid)));
+    const act=R.filter(r=>r.status==='نشط');attD=act.length;attN=act.filter(r=>ids.has(String(r.riderId))).length}
+  const avgRate=col=>{if(!li)return null;let t=0,n=0;db.snaps.forEach(s=>{if(s.imp!==li.id)return;const v=s.v[col];if(v==null||v==='')return;const x=num(String(v).replace('%',''));if(x==null)return;t+=x;n++});return n?{v:t/n,n}:null};
+  const attAvg=avgRate('Attendance Rate'),accAvg=avgRate('Acceptance Rate');
+  let totO=0,totH=0;rs.forEach(x=>{if(x.o!=null)totO+=x.o;if(x.h!=null)totH+=x.h});
+  const oph=totH>0?Math.round(totO/totH*10)/10:null;
+  let pace=null;
+  if(li&&tg&&CM.last){const dim=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate(),W=+db.cfg.days||26,el=Math.min(W,W*(+CM.last.slice(8))/dim),rem=W-el;if(rem>0&&ordT<tg)pace=Math.round((tg-ordT)/rem*10)/10}
+  /* منحنى الطلبات من التقارير الحقيقية بترتيب زمني */
+  const chartHTML=(function(){
+    const ims=li?db.imports.filter(i=>i.from.slice(0,7)===m&&i.to.slice(0,7)===m).slice().sort((a,b)=>a.to<b.to?-1:1):[];
+    if(!ims.length)return '<div class="m" style="padding:14px 4px;text-align:center">لم يتم استيراد تقرير أداء بعد — استورد تقارير الأداء من «تقارير الأداء» وستظهر الطلبات اليومية هنا</div>';
+    const pts=ims.map(i=>{let t=0;db.snaps.forEach(s=>{if(s.imp===i.id){const c=num(s.v['Completed Deliveries']);if(c!=null)t+=c}});return{l:i.from===i.to?i.to:i.from+' → '+i.to,v:t}});
+    const W=560,H=170,P=16,n=pts.length,mx=Math.max(1,...pts.map(p=>p.v),pace||0)*(pace!=null?1.14:1);
+    const y=v=>H-P-(v/mx*(H-2*P)),xx=i=>n===1?W/2:W-P-i*(W-2*P)/(n-1);
+    let d='';pts.forEach((p,i)=>{d+=(i?'L':'M')+Math.round(xx(i))+' '+Math.round(y(p.v))});
+    const area=d+' L'+Math.round(xx(n-1))+' '+(H-P)+' L'+Math.round(xx(0))+' '+(H-P)+' Z';
+    const lab=p=>p.l.length<=10?p.l.slice(5).split('-').reverse().join('/'):p.l.slice(8,10)+'–'+p.l.slice(-2);
+    const circles=pts.map((p,i)=>'<circle cx="'+Math.round(xx(i))+'" cy="'+Math.round(y(p.v))+'" r="3.4" fill="#60a5fa" stroke="#050d24" stroke-width="1.4"><title>'+p.l+': '+p.v+' طلب</title></circle>').join('');
+    const labs=n<=8?pts.map((p,i)=>'<text x="'+Math.round(xx(i))+'" y="'+(H-3)+'" font-size="9" fill="#9fb2d4" text-anchor="middle">'+lab(p)+'</text>').join(''):('<text x="'+(W-P)+'" y="'+(H-3)+'" font-size="9" fill="#9fb2d4" text-anchor="middle">'+lab(pts[0])+'</text><text x="'+P+'" y="'+(H-3)+'" font-size="9" fill="#9fb2d4" text-anchor="middle">'+lab(pts[n-1])+'</text>');
+    const paceL=pace!=null?'<line x1="'+P+'" y1="'+Math.round(y(pace))+'" x2="'+(W-P)+'" y2="'+Math.round(y(pace))+'" stroke="#f5b942" stroke-width="1.4" stroke-dasharray="5 4" opacity=".85"/><text x="'+(P+2)+'" y="'+(Math.round(y(pace))-4)+'" font-size="9" fill="#f5b942">المطلوب يوميًا '+pace+'</text>':'';
+    return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block"><defs><linearGradient id="g5a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b82f6" stop-opacity=".32"/><stop offset="1" stop-color="#3b82f6" stop-opacity=".02"/></linearGradient></defs><path d="'+area+'" fill="url(#g5a)"/><path d="'+d+'" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>'+paceL+circles+labs+'</svg>'
+      +(n<2?'<div class="m" style="font-size:11px;margin-top:4px">تقرير واحد مستورد في هذا الشهر — استورد تقارير أكثر لعرض الاتجاه</div>':'')
+      +'<div class="lg2" style="margin-top:4px"><span><i style="background:#3b82f6"></i>مجموع الطلبات المكتملة لكل تقرير (ترتيب زمني)</span>'+(pace!=null?'<span><i style="background:#f5b942"></i>الوتيرة المطلوبة للحاق بالتارجت = المتبقي ÷ أيام العمل المتبقية</span>':'')+'</div>';
+  })();
+  /* أداء المناديب */
+  const top=rs.filter(x=>x.o!=null&&x.r.status!=='مؤرشف').sort((a,b)=>b.o-a.o).slice(0,5);
+  const lsnap=r=>li?db.snaps.find(s=>s.imp===li.id&&String(s.rid)===String(r.riderId)):null;
+  const ridersHTML=top.length?top.map(x=>{const s=lsnap(x.r);const oh=x.h>0?Math.round(x.o/x.h*10)/10:null;
+    const p=x.t?Math.round(x.o/x.t*100):null;
+    const metas=[esc(x.r.riderId),esc(x.r.vtype||'—'),esc(x.r.city||'—')].join(' · ');
+    const accS=s&&s.v['Acceptance Rate']!=null&&s.v['Acceptance Rate']!==''?fmtRate(s.v['Acceptance Rate']):null;
+    const attS=s&&s.v['Attendance Rate']!=null&&s.v['Attendance Rate']!==''?fmtRate(s.v['Attendance Rate']):null;
+    const line2=(oh!=null?oh+' طلب/س':'طلب/س غير متاح')+(accS?' · قبول '+accS:'')+(attS?' · حضور '+attS:'');
+    return '<div class="li" style="cursor:pointer" onclick="prof(\''+x.r.id+'\',\'perf\')">'+avHTML(x.r.id,36)+'<div class="n"><b>'+esc(x.r.nameAr)+'</b><span class="m" style="font-size:11px">'+metas+'</span><span class="m" style="font-size:11px">'+line2+'</span></div><div style="text-align:left;flex:none"><b>'+x.o+' طلب</b><div style="font-size:11px;font-weight:700;color:'+(p==null?'var(--mu)':pctCol5(p))+'">'+(p==null?'بدون تارجت':p+'%')+'</div></div></div>'}).join(''):'<div class="m">لا توجد بيانات أداء بعد</div>';
+  /* ساعات العمل — قيم منفصلة كما وردت */
+  const HRS=[['Planned Working Hours','الساعات المخططة'],['Actual Working Hours','الساعات الفعلية'],['Lost Hours','الساعات المهدرة'],['Break Hours','ساعات الاستراحة']];
+  let hoursHTML;
+  if(!CM)hoursHTML='<div class="m">لا توجد بيانات بعد</div>';
+  else{const ids=new Set(CM.ims.map(i=>i.id));
+    const sums=HRS.map(([c])=>{let t=0,has=false;db.snaps.forEach(s=>{if(!ids.has(s.imp))return;const v=num(s.v[c]);if(v!=null){t+=v;has=true}});return has?Math.round(t*10)/10:null});
+    hoursHTML=HRS.map(([c,l],i)=>'<div class="hr5"><span>'+l+'</span><b>'+(sums[i]==null?'—':sums[i])+'</b></div>').join('')+'<div class="m" style="font-size:11px;margin-top:6px">كل قيمة مستقلة كما وردت في التقارير المستوردة — لا تُجمع معًا</div>'}
+  /* المناطق */
+  const A=areas();
+  const regHTML=A.length?A.map(a=>{const s=regionStats(a);const g=a==='العلا'?db.cfg:{...db.cfg,...((db.cfg.rcfg||{})[a]||{})};const tm=+g.tgtMoto||0,tc=+g.tgtCar||0,dy=+db.cfg.days||26;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)">'+ring(s.pct,pctCol5(s.pct),58)+'<div style="flex:1;min-width:0"><b>'+esc(a)+'</b><div class="m" style="font-size:11px">'+s.ord+(s.tg?' / '+s.tg:'')+' طلب · '+s.n+' مندوب · '+s.act+' نشط</div><div class="m" style="font-size:11px">'+((db.cfg.rcfg||{})[a]?'تارجت المنطقة':'التارجت الافتراضي')+': دباب '+tm+' · سيارة '+tc+' — '+dy+' يوم عمل</div></div></div>'}).join(''):'<div class="m">لا توجد مناطق بعد</div>';
+  /* يحتاجون متابعة — حسابات مباشرة فقط */
+  let nl=[];
+  if(li){nl=db.snaps.filter(s=>s.imp===li.id).map(s=>({s,r:rBy(s.rid)})).filter(o=>o.r).map(o=>({...o,st:status(o.s,o.r)})).filter(o=>o.st[1]==='er'||o.st[1]==='wn')}
+  const followHTML=nl.length?nl.slice(0,6).map(o=>{const c=(CM.out[o.s.rid]||{}).o,t=tgt(o.r);
+    return '<div class="li" style="cursor:pointer" onclick="prof(\''+o.r.id+'\',\'perf\')">'+avHTML(o.r.id,36)+'<div class="n"><b>'+esc(o.r.nameAr)+'</b><span class="m" style="font-size:11px">'+(t?('مكتمل '+c+' من تارجت '+t+' — متبقي '+Math.max(0,t-c)+' (حتى '+CM.last+')'):o.st[0])+'</span></div><span class="bd">متابعة</span></div>'}).join(''):(li?'<div class="m">لا توجد حالات 👌</div>':'<div class="m">لا توجد بيانات أداء بعد</div>');
+  /* آخر الأنشطة */
+  const ev=[];db.imports.forEach(i=>{const t=i.created||i.at||i.ts;if(t)ev.push([t,'📥','تم استيراد تقرير أداء ('+i.from+' → '+i.to+')'])});db.tickets.forEach(t=>(t.hist||[]).forEach(e=>ev.push([e[0],'⚠️','مشكلة #'+t.no+' — '+e[1]])));R.forEach(r=>{if(r.created)ev.push([r.created,'👤','تمت إضافة مندوب: '+r.nameAr])});
+  const act=ev.filter(e=>e[0]).sort((a,b)=>a[0]<b[0]?1:-1).slice(0,6);
+  const actHTML=act.length?act.map(e=>'<div class="li"><span style="font-size:18px">'+e[1]+'</span><div class="n"><b>'+esc(e[2])+'</b></div><span class="m">'+ago(e[0])+'</span></div>').join(''):'<div class="m">لا توجد أنشطة مسجلة بعد</div>';
+  /* البطاقات */
+  const k1=gk5('box','الطلبات المكتملة — الشهر الحالي',li?ord:'—',tg?(pct+'% من التارجت المحدد'):(li?'بدون تارجت محدد':'لا توجد بيانات أداء بعد'));
+  const attRing=attAvg?(db.cfg.rate==='pct'?attAvg.v:(attAvg.v>1?attAvg.v:attAvg.v*100)):null;
+  const k2='<div class="c gk">'+d5ic('users')+'<div style="min-width:0"><div class="m">متوسط Attendance Rate — آخر تقرير</div><div class="k">'+(attAvg?(Math.round((attAvg.v<=1?attAvg.v*100:attAvg.v)*10)/10)+'%':'—')+'</div><div class="m" style="font-size:11px">'+(attAvg?'متوسط عمود التقرير ('+attAvg.n+' مندوب) — تغطية التقرير: '+attN+'/'+attD+' نشط لهم بيانات':(li?'لا توجد قيم Attendance Rate صالحة في آخر تقرير':'لا توجد بيانات أداء بعد'))+'</div></div>'+(attRing!=null?'<div style="margin-inline-start:auto;flex:none">'+ring(Math.min(100,Math.round(attRing)),'#3b82f6',52)+'</div>':'')+'</div>';
+  const k3=gk5('clock','متوسط الطلبات لكل ساعة — الشهر',oph==null?'—':oph,li?(totH>0?('من '+totO+' طلب خلال '+Math.round(totH)+' ساعة فعلية'):'لا توجد ساعات فعلية مسجلة'):'لا توجد بيانات أداء بعد');
+  const k4=gk5('check','متوسط Acceptance Rate — آخر تقرير',accAvg?(Math.round((accAvg.v<=1?accAvg.v*100:accAvg.v)*10)/10)+'%':'—',accAvg?'متوسط العمود كما ورد في التقرير ('+accAvg.n+' مندوب) — لا يُعاد حسابه':(li?'لا توجد قيم Acceptance Rate صالحة في آخر تقرير':'لا توجد بيانات أداء بعد'));
+  return '<div class="dk2">'+k1+k2+k3+k4+'</div>'
+    +'<div class="sec two"><div class="c"><div class="hd"><b>الطلبات المكتملة — حسب تقارير الأداء المستوردة</b>'+(li?'<span class="tag5" style="margin-inline-start:auto">آخر تقرير: '+li.to+'</span>':'')+'</div>'+chartHTML+(li?'<div class="m" style="font-size:11px;margin-top:4px">آخر استيراد: '+esc(li.file||'')+' ('+li.from+' → '+li.to+') — '+li.n+' صف</div>':'')+'</div>'
+    +'<div class="c"><div class="hd"><b>ساعات العمل — الشهر الحالي</b></div>'+hoursHTML+'</div></div>'
+    +'<div class="sec two"><div class="c"><div class="hd"><b>أداء المناديب — الأعلى طلبات هذا الشهر</b></div>'+ridersHTML+'</div>'
+    +'<div class="c"><div class="hd"><b>المناطق مقابل التارجت</b></div>'+regHTML+'</div></div>'
+    +'<div class="sec eq"><div class="c"><div class="hd"><b>يحتاجون متابعة</b></div>'+followHTML+'</div>'
+    +'<div class="c"><div class="hd"><b>آخر الأنشطة</b></div>'+actHTML+'</div></div>'
+    +(storeOk?'':'<div class="c er">الحفظ المحلي غير متاح</div>');
+};
+try{if(document.getElementById('lg').style.display==='none')render()}catch(e){}
+})();
+</script>
+
+<script>
+/* ===== v5e — التحليل الأسبوعي: تصدير Excel تحليلي (حقائق مرصودة + مقارنات عادلة + أسئلة مفتوحة) ===== */
+function weekWin(endOff){
+  if(!db.imports.length)return null;
+  const cov=new Set();db.imports.forEach(i=>{for(let d=new Date(i.from+'T00:00:00Z');d<=new Date(i.to+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+1))cov.add(d.toISOString().slice(0,10))});
+  const last=[...cov].sort().pop();
+  const end=new Date(last+'T00:00:00Z');end.setUTCDate(end.getUTCDate()-7*(endOff||0));
+  const start=new Date(end);start.setUTCDate(start.getUTCDate()-6);
+  const s=start.toISOString().slice(0,10),e=end.toISOString().slice(0,10);
+  const days=[],missing=[];
+  for(let d=new Date(start);d<=end;d.setUTCDate(d.getUTCDate()+1)){const k=d.toISOString().slice(0,10);days.push(k);if(!cov.has(k))missing.push(k)}
+  const ims=db.imports.filter(i=>i.to>=s&&i.from<=e);
+  return{from:s,to:e,days,missing,ims,covered:days.filter(d=>!missing.includes(d))};
+}
+function winAgg(w){
+  const ids=new Set(w.ims.map(i=>i.id));const per={};
+  db.snaps.forEach(s=>{if(!ids.has(s.imp))return;const k=String(s.rid);const o=per[k]||(per[k]={o:0,h:0,ph:0,lh:0,bh:0,wd:0,ar:[],at:[],ns:0,dec:0,can:0,n:0});
+    const c=num(s.v['Completed Deliveries']);if(c!=null)o.o+=c;
+    const hh=num(s.v['Actual Working Hours']);if(hh!=null)o.h+=hh;
+    const p=num(s.v['Planned Working Hours']);if(p!=null)o.ph+=p;
+    const l=num(s.v['Lost Hours']);if(l!=null)o.lh+=l;
+    const b=num(s.v['Break Hours']);if(b!=null)o.bh+=b;
+    const wd=num(s.v['Working Days']);if(wd!=null)o.wd+=wd;
+    const ar=num(String(s.v['Acceptance Rate']??'').replace('%',''));if(ar!=null)o.ar.push(ar);
+    const at=num(String(s.v['Attendance Rate']??'').replace('%',''));if(at!=null)o.at.push(at);
+    const ns=num(s.v['No Shows']);if(ns!=null)o.ns+=ns;
+    const d=num(s.v['Declined Deliveries']);if(d!=null)o.dec+=d;
+    const ca=num(s.v['Cancelled Deliveries']);if(ca!=null)o.can+=ca;
+    o.n++});
+  return per;
+}
+function rateDispW(x){if(x==null)return'';const v=x<=1?x*100:x;return (Math.round(v*10)/10)+'%'}
+function avgA(a){return a.length?a.reduce((p,c)=>p+c,0)/a.length:null}
+async function exportWeekly(){
+  if(typeof ExcelJS==='undefined')return toast('تعذر تحميل مكتبة الشيت');
+  const w=weekWin(0);
+  if(!w||!w.ims.length)return toast('لا توجد تقارير مستوردة بعد — استورد تقارير الأداء أولًا');
+  const per=winAgg(w),W=+db.cfg.days||26,covN=w.covered.length;
+  const prevW=weekWin(1);const prev=prevW&&prevW.ims.length?winAgg(prevW):null;
+  const ridersAll=db.riders.map(r=>({r,k:String(r.riderId),a:per[String(r.riderId)]})).filter(x=>x.a);
+  const riders=ridersAll.filter(x=>x.r.status!=='موقوف');
+  const stoppedN=ridersAll.length-riders.length;
+  const unmatched=Object.keys(per).filter(k=>!rBy(k)).length;
+  const sum=(f,set)=>set.reduce((p,x)=>p+f(x),0);
+  const totO=sum(x=>x.a.o,ridersAll),totH=sum(x=>x.a.h,ridersAll);
+  const oph=totH>0?Math.round(totO/totH*100)/100:null;
+  const arV=ridersAll.map(x=>avgA(x.a.ar)).filter(v=>v!=null),atV=ridersAll.map(x=>avgA(x.a.at)).filter(v=>v!=null);
+  const arAvg=avgA(arV),atAvg=avgA(atV);
+  /* المقارنة بالفترة السابقة — نفس الطول، بدون تداخل، تطبيع لكل يوم مغطى */
+  let cmpRows=[];
+  if(prev&&prevW.covered.length){
+    const pO=sum(x=>x.a.o,db.riders.map(r=>({a:prev[String(r.riderId)]})).filter(x=>x.a));
+    const pH=sum(x=>x.a.h,db.riders.map(r=>({a:prev[String(r.riderId)]})).filter(x=>x.a));
+    const pOph=pH>0?pO/pH:null;
+    const d=(a,b)=>b>0?Math.round((a-b)/b*1000)/10:null;
+    cmpRows=[['الطلبات لكل يوم مغطى',Math.round(totO/covN*100)/100,Math.round(pO/prevW.covered.length*100)/100,d(totO/covN,pO/prevW.covered.length)],
+      ['الطلبات لكل ساعة فعلية',oph,pOph==null?null:Math.round(pOph*100)/100,oph!=null&&pOph!=null?d(oph,pOph):null]];
+  }
+  /* تفصيل المناديب */
+  const detH=['Rider ID','اسم المندوب','المدينة','المركبة','أيام العمل (Working Days)','الساعات المخططة','الساعات الفعلية','الساعات المهدرة','ساعات الاستراحة','الطلبات المكتملة','الطلبات/ساعة فعلية','الطلبات/يوم عمل','Acceptance Rate (كما ورد)','Attendance Rate (كما ورد)','التارجت الشهري','المتوقع للفترة* (تقدير)','إنجاز الفترة المغطاة %','الحالة (حسابية)','الإجراء المقترح','أسئلة مفتوحة (حقائق من الأعمدة)'];
+  const det=[detH];
+  riders.sort((a,b)=>b.a.o-a.a.o).forEach(({r,a})=>{
+    const t=tgt(r),exp=t?Math.round(t/W*covN*10)/10:null;
+    const pp=exp?Math.round(a.o/exp*100):null;
+    const ok=+db.cfg.onTrack||.9;
+    let st2,act2;
+    if(a.wd===0&&a.o===0){st2='لا بيانات عمل في الفترة';act2='تحقق هل كان مجدولًا قبل أي تقييم'}
+    else if(!t){st2='بدون تارجت';act2='حدد التارجت لتقييم الإنجاز'}
+    else if(a.o>=exp){st2='حقق المتوقع للفترة المغطاة';act2='—'}
+    else if(pp>=ok*100){st2='قريب من المتوقع';act2='متابعة عادية'}
+    else{st2='أقل من المتوقع للأيام المغطاة فقط';act2='تواصل مع المندوب وسجّل سبب الفجوة'}
+    const qs=[];
+    if(a.ns>0)qs.push('No Shows = '+a.ns+' — ما سببها؟');
+    if(a.dec>0)qs.push('Declined = '+a.dec+' — ما سبب الرفض؟');
+    if(a.h===0&&a.o>0)qs.push('ساعات فعلية صفر مع وجود طلبات — تحقق من الإدخال');
+    if(a.wd===0)qs.push('Working Days = صفر — هل عمل فعلًا هذه الفترة؟');
+    det.push([String(r.riderId),r.nameAr,r.city||'',r.vtype||'غير محدد',a.wd,a.ph,a.h,a.lh,a.bh,a.o,a.h>0?Math.round(a.o/a.h*100)/100:'',a.wd>0?Math.round(a.o/a.wd*100)/100:'',rateDispW(avgA(a.ar)),rateDispW(avgA(a.at)),t||'',exp==null?'':exp,pp==null?'':pp,st2,act2,qs.join(' | ')]);
+  });
+  /* المقارنات العادلة: نفس الفترة، تطبيع بالساعة وبيوم العمل */
+  const grp=(key)=>{const g={};ridersAll.forEach(({r,a})=>{const k=key(r)||'غير محدد';const o=g[k]||(g[k]={n:0,o:0,h:0,wd:0,ar:[],at:[]});o.n++;o.o+=a.o;o.h+=a.h;o.wd+=a.wd;const x=avgA(a.ar);if(x!=null)o.ar.push(x);const y=avgA(a.at);if(y!=null)o.at.push(y)});return g};
+  const cmpH=['المجموعة','المناديب','الطلبات','الطلبات/ساعة فعلية','الطلبات/يوم عمل مندوب','متوسط Acceptance Rate','متوسط Attendance Rate'];
+  const cmpRows2=[cmpH];
+  const pushG=(title,g)=>{cmpRows2.push([title,'','','','','','']);Object.keys(g).sort().forEach(k=>{const o=g[k];cmpRows2.push([k,o.n,o.o,o.h>0?Math.round(o.o/o.h*100)/100:'',o.wd>0?Math.round(o.o/o.wd*100)/100:'',rateDispW(avgA(o.ar)),rateDispW(avgA(o.at))])})};
+  pushG('حسب المركبة',grp(r=>r.vtype));
+  pushG('حسب المدينة',grp(r=>cKey(r.city)));
+  /* يحتاجون متابعة */
+  const fu=det.slice(1).filter(x=>x[17]==='أقل من المتوقع للأيام المغطاة فقط'||x[17]==='بدون تارجت').slice(0,15).map(x=>[x[1],x[0],x[15],x[16]===''?'—':x[16]+'%',x[17],x[18]]);
+  /* الملخص */
+  const S=[['التحليل الأسبوعي لأداء المناديب',''],['الفترة',w.from+' → '+w.to],['الأيام المغطاة بالتقارير ('+covN+')',w.covered.join('، ')],['أيام بلا تقارير ('+w.missing.length+')',w.missing.length?w.missing.join('، '):'لا يوجد'],['التقارير الداخلة في التجميع',w.ims.map(i=>esc(i.file||'')+' ('+i.from+' → '+i.to+')').join(' | ')],['',''],
+    ['إجمالي الطلبات المكتملة',totO],['المناديب ذوو البيانات',riders.length],...(stoppedN?[['مستبعدون بحالة «موقوف» (بياناتهم محفوظة في التطبيق)',stoppedN]]:[]),['الساعات الفعلية',Math.round(totH*100)/100],['الطلبات لكل ساعة فعلية',oph==null?'غير متاح (ساعات = 0)':oph],['متوسط Acceptance Rate (من عمود التقرير، '+arV.length+' قيمة)',rateDispW(arAvg)||'غير متوفر'],['متوسط Attendance Rate (من عمود التقرير، '+atV.length+' قيمة)',rateDispW(atAvg)||'غير متوفر'],['',''],
+    ['مقارنة بالأسبوع السابق ('+(prevW?prevW.from+' → '+prevW.to:'')+') — نفس الطول وبدون تداخل','']];
+  if(cmpRows.length){S.push(['المؤشر','هذا الأسبوع | الأسبوع السابق | التغير %']);cmpRows.forEach(r=>S.push([r[0],r[1]+' | '+r[2]+' | '+(r[3]==null?'غير متاح':(r[3]>0?'+':'')+r[3]+'%')]))}
+  else S.push(['المقارنة','لا توجد تغطية كافية في الأسبوع السابق — لا يُستنتج تحسن أو تراجع من فترة واحدة']);
+  S.push(['',''],['يحتاجون متابعة (على الأيام المغطاة بالتقارير فقط)','']);
+  if(fu.length)fu.forEach(x=>S.push([x[0]+' ('+x[1]+')','إنجاز الفترة المغطاة: '+x[3]+' — '+x[4]+' — '+x[5]]));
+  else S.push(['لا توجد حالات','']);
+  S.push(['',''],['منهجية القراءة',''],['','* المتوقع للفترة تقدير حسابي: التارجت الشهري ÷ أيام العمل الشهرية المعروفة في الإعدادات ('+W+' يوم) × الأيام المغطاة بالتقارير ('+covN+').'],['','ملف التقرير لا يحمل عمود تاريخ — الأيام المغطاة مأخوذة من نطاق «من/إلى» المُدخل عند الاستيراد، وعمود Working Days مقياس داخل التقرير وليس دليلًا على أيام بعينها. الإنجاز يُقرأ على الأيام المغطاة فقط ولا يعني تقصيرًا في الأسبوع الكامل عندما تكون التغطية جزئية.'],['','المعدلات (Acceptance/Attendance) متوسط القيم كما وردت في أعمدة التقرير ولا تُعاد حسابها. لا يُحكم على مندوب بالطلبات الخام وحدها — قارن بالساعة وبيوم العمل ضمن نفس الفترة.'],['','الأرقام حقائق مرصودة؛ أسباب الفجوات أسئلة مفتوحة تُسأل للمندوب ولا تُفترض. المندوب الموقوف لا يظهر في صفوف التفصيل، وتبقى طلباته المكتملة ضمن إجمالي الإنجاز، وفي التطبيق يُخصم من تارجت المنطقة الجزء المتبقي من تارجته فقط.']);
+  if(unmatched)S.push(['تنبيه',unmatched+' Rider ID في التقارير غير مسجلين في التطبيق ولم يدخلوا في صفوف المناديب']);
+  /* كتابة المصنف منسقًا عبر ExcelJS */
+  const NAVY='FF1E3A6E',hdrFill={type:'pattern',pattern:'solid',fgColor:{argb:NAVY}},hdrFont={bold:true,color:{argb:'FFFFFFFF'},size:11};
+  const wb=new ExcelJS.Workbook();
+  const ws1=wb.addWorksheet('الملخص',{views:[{rightToLeft:true,state:'frozen',ySplit:1}]});
+  ws1.columns=[{width:46},{width:95}];
+  S.forEach(([k,v],i)=>{
+    const r=ws1.addRow([k,v==null?'':String(v)]);
+    if(i===0){r.font={bold:true,size:15,color:{argb:NAVY}};r.height=24}
+    else if(k&&v===''){r.getCell(1).fill=hdrFill;r.getCell(2).fill=hdrFill;r.getCell(1).font=hdrFont;r.getCell(2).font=hdrFont}
+    else{r.getCell(1).font={bold:true};r.getCell(1).alignment={vertical:'top',wrapText:true};r.getCell(2).alignment={wrapText:true,vertical:'top'};const L=String(v||'').length;if(L>90)r.height=Math.min(160,Math.ceil(L/85)*15)}
+  });
+  ws1.pageSetup={fitToPage:true,fitToWidth:1,fitToHeight:0,orientation:'portrait'};
+  const ws2=wb.addWorksheet('تفصيل المناديب',{views:[{rightToLeft:true,state:'frozen',ySplit:1}]});
+  ws2.columns=[12,22,15,10,12,12,12,12,12,12,12,12,14,14,12,14,12,22,34,46].map(w=>({width:w}));
+  const hr=ws2.addRow(detH);hr.eachCell(c=>{c.fill=hdrFill;c.font=hdrFont;c.alignment={wrapText:true,vertical:'middle',horizontal:'center'}});hr.height=30;
+  det.slice(1).forEach(row=>{const r=ws2.addRow(row);r.eachCell((c,ci)=>{c.alignment={wrapText:ci>=19,vertical:'top'}})});
+  ws2.autoFilter={from:{row:1,column:1},to:{row:1,column:detH.length}};
+  ws2.pageSetup={fitToPage:true,fitToWidth:1,fitToHeight:0,orientation:'landscape'};
+  const ws3=wb.addWorksheet('مقارنات عادلة',{views:[{rightToLeft:true}]});
+  ws3.columns=[{width:22},{width:10},{width:10},{width:18},{width:20},{width:22},{width:22}];
+  cmpRows2.forEach((row,i)=>{
+    const r=ws3.addRow(row);
+    if(i===0){r.eachCell(c=>{c.fill=hdrFill;c.font=hdrFont;c.alignment={wrapText:true,vertical:'middle'}});r.height=26}
+    else if(row[0]&&row[1]===''){r.getCell(1).font={bold:true,color:{argb:NAVY},size:12}}
+  });
+  ws3.pageSetup={fitToPage:true,fitToWidth:1,fitToHeight:0};
+  const buf=await wb.xlsx.writeBuffer();
+  saveFile('تحليل_الأداء_الأسبوعي_'+w.to+'.xlsx',new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  toast('تم تصدير التحليل الأسبوعي — الفترة '+w.from+' → '+w.to+(w.missing.length?' ('+w.missing.length+' أيام بلا تقارير)':''));
+}
 </script>
 
 </body></html>
